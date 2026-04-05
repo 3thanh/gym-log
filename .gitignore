@@ -30,9 +30,8 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files — real values live in ~/code/env/; symlink .env.local (see README)
 .env*
-!.env.example
 
 # vercel
 .vercel
