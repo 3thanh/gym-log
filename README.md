@@ -4,22 +4,22 @@ Minimal workout logger: **Resume last**, **Done set** with ±5 lb / ±1 rep, **H
 
 ## Local dev
 
-Env files are **not** kept in this repo. Use your **`~/code/env/`** folder for templates and secrets, then symlink into the project (Next.js only auto-loads `.env.local` from the app root).
+Env files are **not** kept in this repo. Keep templates and secrets under **`~/Code/env/`** (sibling of this app under **`~/Code`**), then symlink into the project root (Next.js only auto-loads `.env.local` from the app root).
 
 ```bash
 npm install
 
 # One-time: create secrets file next to the template (never commit gym-log.env.local)
-cp ~/code/env/gym-log.env.example ~/code/env/gym-log.env.local
-# Edit ~/code/env/gym-log.env.local — paste your Supabase anon key
+cp ~/Code/env/gym-log.env.example ~/Code/env/gym-log.env.local
+# Edit ~/Code/env/gym-log.env.local — paste your Supabase anon key
 
 # One-time: symlink so Next.js picks it up
-ln -sf ~/code/env/gym-log.env.local ~/Projects/gym-log/.env.local
+ln -sf ~/Code/env/gym-log.env.local ~/Code/gym-log/.env.local
 
 npm run dev
 ```
 
-Template (tracked on your machine only, outside git): **`~/code/env/gym-log.env.example`**
+Template (on your machine, outside git): **`~/Code/env/gym-log.env.example`**
 
 ## Supabase (project `nsgpcfancopiybsebeis`)
 
@@ -36,7 +36,7 @@ Setup:
 
 1. **Authentication → Providers → Anonymous** — enable Anonymous sign-ins.
 2. Open [**SQL Editor**](https://supabase.com/dashboard/project/nsgpcfancopiybsebeis/sql), paste and run [`supabase/migrations/001_init.sql`](./supabase/migrations/001_init.sql).
-3. In [**API settings**](https://supabase.com/dashboard/project/nsgpcfancopiybsebeis/settings/api), copy the **anon public** key into **`~/code/env/gym-log.env.local`** (same vars as below). On Vercel, set:
+3. In [**API settings**](https://supabase.com/dashboard/project/nsgpcfancopiybsebeis/settings/api), copy the **anon public** key into **`~/Code/env/gym-log.env.local`** (same vars as below). On Vercel, set:
    - `NEXT_PUBLIC_SUPABASE_URL` = `https://nsgpcfancopiybsebeis.supabase.co`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = (anon key)
 
