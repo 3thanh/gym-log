@@ -5,7 +5,7 @@ import { useGym } from "@/context/GymProvider";
 
 export default function HomePage() {
   const router = useRouter();
-  const { startFromLast, startTemplate, lastSaved, active } = useGym();
+  const { startFromLast, startTemplate, lastSaved, active, syncStatus } = useGym();
 
   const goWorkout = () => router.push("/workout");
 
@@ -40,6 +40,15 @@ export default function HomePage() {
           Start template (push day)
         </button>
       </div>
+
+      {syncStatus && (
+        <p
+          className="rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-muted"
+          role="status"
+        >
+          {syncStatus}
+        </p>
+      )}
 
       {lastSaved && (
         <p className="text-sm text-text-muted">

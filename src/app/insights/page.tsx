@@ -3,6 +3,10 @@
 import { useMemo } from "react";
 import { useGym } from "@/context/GymProvider";
 
+function dayKey(d: Date) {
+  return d.toISOString().slice(0, 10);
+}
+
 export default function InsightsPage() {
   const { history } = useGym();
 
@@ -31,7 +35,23 @@ export default function InsightsPage() {
         volDelta = `${pct >= 0 ? "+" : ""}${pct}% vs prior session`;
       }
     }
-    return { sessionsThisWeek, volume, volDelta, last };
+
+    const keys = new Set<string>();
+    for (const h of history) {
+      keys.add(dayKey(new Date(h.endedAt)));
+    }
+    let streak = 0;
+    const lastDay = new Date(
+      Math.max(...history.map((h) => new Date(h.endedAt).getTime()))
+    );
+    for (let i = 0; i < 365; i++) {
+      const d = new Date(lastDay);
+      d.setDate(d.getDate() - i);
+      if (keys.has(dayKey(d))) streak += 1;
+      else break;
+    }
+
+    return { sessionsThisWeek, volume, volDelta, last, totalSessions: history.length, streak };
   }, [history]);
 
   return (
@@ -73,6 +93,21 @@ export default function InsightsPage() {
             <p className="text-sm text-text-muted">sessions in the last 7 days</p>
             <p className="mt-3 text-sm text-primary">
               Anchor two fixed weekdays to protect the habit.
+            </p>
+          </article>
+          <article className="min-w-[85%] snap-start rounded-2xl border border-border bg-surface p-4 shadow-sm">
+            <p className="text-xs font-medium uppercase tracking-wide text-text-muted">
+              Streak and total
+            </p>
+            <p className="mt-2 text-3xl font-semibold tabular-nums text-text">
+              {stats.streak}
+            </p>
+            <p className="text-sm text-text-muted">
+              day{stats.streak === 1 ? "" : "s"} in a row (calendar days with a log)
+            </p>
+            <p className="mt-2 text-sm text-text-muted">
+              <span className="font-semibold text-text">{stats.totalSessions}</span>{" "}
+              sessions saved on this device
             </p>
           </article>
         </div>

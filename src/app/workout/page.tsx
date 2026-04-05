@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useGym } from "@/context/GymProvider";
+import { isSupabaseConfigured } from "@/lib/supabase/client";
 
 function allComplete(w: NonNullable<ReturnType<typeof useGym>["active"]>) {
   return w.exercises.every((e) => e.completed.length >= e.plannedSets);
@@ -18,6 +19,8 @@ export default function WorkoutPage() {
     finishWorkout,
     cancelWorkout,
   } = useGym();
+
+  const cloud = isSupabaseConfigured();
 
   if (!active) {
     return (
@@ -163,7 +166,7 @@ export default function WorkoutPage() {
       {done && (
         <p className="rounded-xl border border-border bg-surface p-4 text-sm text-text-muted">
           All sets logged. Tap <span className="font-medium text-text">Finish</span>{" "}
-          to save and sync.
+          to save{cloud ? " and sync to the cloud" : " on this device"}.
         </p>
       )}
 

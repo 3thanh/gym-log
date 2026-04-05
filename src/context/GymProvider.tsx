@@ -9,10 +9,12 @@ import {
   useState,
 } from "react";
 import type { ActiveExercise, ActiveWorkout, CompletedSet, SavedWorkout } from "@/lib/types";
+import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { ensureAnonymousSession, syncWorkoutToSupabase } from "@/lib/supabase/sync";
 
 const STORAGE_HISTORY = "gym-log:history";
 const STORAGE_LAST = "gym-log:last-workout";
+const STORAGE_ACTIVE = "gym-log:active";
 
 type GymContextValue = {
   history: SavedWorkout[];
@@ -27,6 +29,8 @@ type GymContextValue = {
   setRepsDelta: (delta: number) => void;
   finishWorkout: () => void;
   cancelWorkout: () => void;
+  removeHistoryEntry: (id: string) => void;
+  clearHistory: () => void;
 };
 
 const GymContext = createContext<GymContextValue | null>(null);
@@ -75,6 +79,26 @@ function loadLast(): SavedWorkout | null {
   }
 }
 
+function loadActive(): ActiveWorkout | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(STORAGE_ACTIVE);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as ActiveWorkout;
+    if (
+      !parsed ||
+      typeof parsed !== "object" ||
+      !Array.isArray(parsed.exercises) ||
+      typeof parsed.exerciseIndex !== "number"
+    ) {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
 function cloneWorkoutToActive(saved: SavedWorkout): ActiveWorkout {
   const exercises: ActiveExercise[] = saved.exercises.map((ex) => {
     const last = ex.sets.at(-1);
@@ -108,6 +132,7 @@ export function GymProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setHistory(loadHistory());
     setLastSaved(loadLast());
+    setActive(loadActive());
     setHydrated(true);
   }, []);
 
@@ -122,10 +147,18 @@ export function GymProvider({ children }: { children: React.ReactNode }) {
   }, [lastSaved, hydrated]);
 
   useEffect(() => {
+    if (!hydrated) return;
+    if (active) localStorage.setItem(STORAGE_ACTIVE, JSON.stringify(active));
+    else localStorage.removeItem(STORAGE_ACTIVE);
+  }, [active, hydrated]);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured()) return;
     void ensureAnonymousSession();
   }, []);
 
   const startFromLast = useCallback(() => {
+    setSyncStatus(null);
     const last = loadLast();
     if (last) {
       setActive(cloneWorkoutToActive(last));
@@ -141,6 +174,7 @@ export function GymProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const startTemplate = useCallback(() => {
+    setSyncStatus(null);
     setActive({
       id: crypto.randomUUID(),
       name: "Push day",
@@ -240,21 +274,38 @@ export function GymProvider({ children }: { children: React.ReactNode }) {
           sets: e.completed,
         })),
       };
-      setHistory((h) => [saved, ...h]);
-      setLastSaved(saved);
-      setSyncStatus(null);
-      void (async () => {
-        const r = await syncWorkoutToSupabase(saved);
-        setSyncStatus(
-          r.ok ? "Synced to cloud" : r.error ? `Cloud: ${r.error}` : "Saved locally only"
-        );
-      })();
+      queueMicrotask(() => {
+        setHistory((h) => [saved, ...h]);
+        setLastSaved(saved);
+        if (!isSupabaseConfigured()) {
+          setSyncStatus("Saved on this device");
+          return;
+        }
+        setSyncStatus("Syncing…");
+        void syncWorkoutToSupabase(saved).then((r) => {
+          setSyncStatus(
+            r.ok
+              ? "Synced to cloud"
+              : r.error
+                ? `Cloud: ${r.error}`
+                : "Saved locally; sync failed"
+          );
+        });
+      });
       return null;
     });
   }, []);
 
   const cancelWorkout = useCallback(() => {
     setActive(null);
+  }, []);
+
+  const removeHistoryEntry = useCallback((id: string) => {
+    setHistory((h) => h.filter((x) => x.id !== id));
+  }, []);
+
+  const clearHistory = useCallback(() => {
+    setHistory([]);
   }, []);
 
   const value = useMemo<GymContextValue>(
@@ -271,6 +322,8 @@ export function GymProvider({ children }: { children: React.ReactNode }) {
       setRepsDelta,
       finishWorkout,
       cancelWorkout,
+      removeHistoryEntry,
+      clearHistory,
     }),
     [
       history,
@@ -285,6 +338,8 @@ export function GymProvider({ children }: { children: React.ReactNode }) {
       setRepsDelta,
       finishWorkout,
       cancelWorkout,
+      removeHistoryEntry,
+      clearHistory,
     ]
   );
 
