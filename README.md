@@ -7,25 +7,38 @@ Minimal workout logger: **Resume last**, **Done set** with ±5 lb / ±1 rep, **H
 ```bash
 npm install
 cp .env.example .env.local
-# add your Supabase URL + anon key
+# copy the anon key from Supabase → Project Settings → API into .env.local
 npm run dev
 ```
 
-## Supabase (project `ethan80808` or your ref)
+## Supabase (project `nsgpcfancopiybsebeis`)
 
-1. In the Supabase dashboard: **Authentication → Providers → Anonymous** — enable Anonymous sign-ins.
-2. Open **SQL Editor**, paste and run `supabase/migrations/001_init.sql`.
-3. Copy **Project URL** and **anon public** key into Vercel (or `.env.local`) as `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+This app targets the Supabase project with ref **`nsgpcfancopiybsebeis`** (your current org/group in the dashboard).
+
+| What | Link |
+|------|------|
+| Project home | [Dashboard — nsgpcfancopiybsebeis](https://supabase.com/dashboard/project/nsgpcfancopiybsebeis) |
+| **SQL Editor** (run migration) | [SQL Editor](https://supabase.com/dashboard/project/nsgpcfancopiybsebeis/sql) |
+| API URL & keys | [Project Settings → API](https://supabase.com/dashboard/project/nsgpcfancopiybsebeis/settings/api) |
+| Anonymous auth | [Authentication → Providers](https://supabase.com/dashboard/project/nsgpcfancopiybsebeis/auth/providers) |
+
+Setup:
+
+1. **Authentication → Providers → Anonymous** — enable Anonymous sign-ins.
+2. Open [**SQL Editor**](https://supabase.com/dashboard/project/nsgpcfancopiybsebeis/sql), paste and run [`supabase/migrations/001_init.sql`](./supabase/migrations/001_init.sql).
+3. In [**API settings**](https://supabase.com/dashboard/project/nsgpcfancopiybsebeis/settings/api), copy the **anon public** key. Set in `.env.local` and on Vercel:
+   - `NEXT_PUBLIC_SUPABASE_URL` = `https://nsgpcfancopiybsebeis.supabase.co`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = (anon key)
 
 Finished workouts are inserted into `workout_sessions`, `workout_session_exercises`, and `workout_set_entries` under the anonymous (or signed-in) user.
 
 ## Deploy on Vercel
 
-Connect this GitHub repo, set the same two env vars, deploy. CLI: `vercel --prod` from repo root.
+Connect this GitHub repo, set the same two env vars for Production (and Preview if needed), then redeploy. CLI: `vercel --prod` from repo root.
 
 ## GitHub
 
-Default remote: `https://github.com/3thanh/gym-log` (after `gh repo create`).
+Default remote: `https://github.com/3thanh/gym-log`.
 
 ## Branding
 
